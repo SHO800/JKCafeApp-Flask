@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2J - Cafe</title>
+    <!-- Reset - CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/ress/dist/ress.min.css">
+    <!-- Base - CSS -->
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/animation.css">
+    <!-- INDEX - CSS -->
+    <link rel="stylesheet" href="/static/css/register/register.css">
+    <!-- SUM - JS -->
+</head>
+<body>
+    <div class="master-wrapper">
+        <!-- ヘッダー -->
+        <header id="header">
+            <h1 class="site-title">
+                <a href="/">
+                    Home
+                </a>
+            </h1>
+            <nav>
+                <ul>
+                    <li><a href="/register">Register</a></li>
+                    <li><a href="/admin">admin</a></li>
+                    <li><a href="/clear">clear</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <h1 id="big-title" > お会計 </h1>
+
+        <!--  -->
+        <div class="container">
+            <div class="grid-box scroll">
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>商品番号</th>
+                            <th style="text-align: left;">商品名</th>
+                            <th>単価</th>
+                            <th>個数</th>
+                            <th style="text-align: center;">確定</th>
+                        </tr>
+                        {% for menue in menues %}
+                            <tr>
+                                <form action="{{ url_for('add_menue') }}" method="POST">
+                                    <td style="text-align: center;"><input type="text" name="id" value="No . {{ menue.id }}" style="width: 50px; color:#6e6e6e;"></td>
+                                    <td>{{ menue.menue_name }}</td>
+                                    <td style="text-align: center;">{{ menue.value }}</td>
+                                    <td style="text-align: center;">
+                                        <select name="quantity" class="input-border">
+                                            <option value="1">１</option>
+                                            <option value="2">２</option>
+                                            <option value="3">３</option>
+                                            <option value="4">４</option>
+                                        </select>
+                                    </td>
+                                    <!-- <td>1596　円</td> -->
+                                    <td style="text-align: center;"><input type="submit" value="確定" class="input-border"></td>
+                                </form>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="grid-box scroll y-grid">
+                <div class="grid-top scroll">
+                    <table class="checkout-menue" id="session-menues">
+                        <tbody>
+                            <tr>
+                                <th style="text-align: center;">商品番号</th>
+                                <th style="text-align: left;">商品名</th>
+                                <th>単価</th>
+                                <th>個数</th>
+                                <th>金額</th>
+                                <th>削除</th>
+                            </tr>
+                            {% for session_menue in session_menues %}
+                                <form action="{{ url_for('delete_menue') }}" method="POST">
+                                    <tr>
+                                        <td style="text-align: center;"><input type="text" name="id" value="No . {{ session_menue.id }}" style="width: 50px; color:#6e6e6e;"></td>
+                                        <td>{{ session_menue.menue_name }}</td>
+                                        <td style="text-align: center;">{{ session_menue.quantity }}個</td>
+                                        <td style="text-align: center;">{{ session_menue.value }}</td>
+                                        <td style="text-align: center;">{{ session_menue.sum_value }}</td>
+                                        <td style="text-align: center;"><input type="submit" value="削除" class="input-border"></td>
+                                    </tr>
+                                </form>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="grid-bottom" style="margin-top: 50px;">
+                    <div class="checkout">
+                        <div style="display: flex; align-items: end; justify-content: space-between">
+                            <p>合計</p>
+                            <p style="padding-right: 50px; font-size: 2rem;" id="sum-value"> - </p>
+                        </div>
+                        <div style="border-bottom: solid 5px #bdbdbd;"></div>
+                        <form action="{{ url_for('checkout_submit') }}" method="POST">
+                            <input type="submit" name="" id="checkout-submit" value="支払い完了">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        window.onload = function () {
+            var tableElem = document.getElementById('session-menues');
+            var rowElems = tableElem.rows;
+            var price = 0;
+            for (i = 1, len = rowElems.length; i < len; i++) {
+                price += parseInt(rowElems[i].cells[4].innerText);
+            }
+            document.getElementById('sum-value').innerText = `${price}円`;
+        }
+    </script>
+</body>
+</html>

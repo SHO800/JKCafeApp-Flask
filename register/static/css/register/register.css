@@ -1,0 +1,109 @@
+#big-title {
+    margin: 60px auto 0px auto;
+    text-align: center;
+    font-size: 2rem;
+    color: white;
+    background-image: linear-gradient(90deg, rgb(236, 187, 236), rgb(139, 222, 231), rgb(187, 196, 236));
+
+    padding: 1rem;
+    border-radius: 40px;
+    box-shadow: 0 0px 50px 0 rgba(197, 197, 197, 0.5);
+
+    background-size: 800% 800%;
+    animation: GradietionAnimation 9s ease infinite;
+}
+
+.container {
+    display: grid;
+    
+    margin-top: 50px;
+    grid-template-columns: 1.2fr 1fr;
+    /* grid-template-rows: repeat(4, 1fr); */
+    grid-column-gap: 20px;
+    grid-row-gap: 40px;
+    justify-items: center;
+    align-items: center;
+    
+    height: 70vh;
+}
+
+.grid-box {
+    padding: 30px;
+    
+    background-color: #ffffff28;
+    border-radius: 20px;
+    width: 100%;
+    height: 100%;
+    
+    box-shadow: 0 0px 35px 0 rgba(155, 155, 155, 0.329);
+}
+
+.scroll {
+    overflow-y: scroll;
+    -ms-overflow-style: none;    /* IE, Edge 対応 */
+    scrollbar-width: none;       /* Firefox 対応 */
+}
+
+.scroll::-webkit-scrollbar{
+    display: none;
+}
+
+table {
+    font-size: 0.95rem;
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+
+    background-image: linear-gradient(45deg, rgba(236, 187, 236, 0.4), rgb(139, 222, 231, 0.4), rgb(187, 196, 236, 0.4));
+    background-size: 800% 800%;
+    animation: GradietionAnimation 9s ease infinite;
+    border-radius: 20px;
+    color: #6e6e6e;
+}
+
+th{
+    padding: 20px;
+}
+
+
+td {
+    margin: 10px;
+    padding: 10px;
+    font-weight: bold;
+}
+
+table tr{
+    cursor: pointer;
+    border-bottom: solid 20px #e3f6fc;
+}
+
+.input-border {
+    color: #6e6e6e;
+    padding: 10px 20px;
+    border: solid 4px #e3f6fc ;
+    border-radius: 10px;
+}
+
+.y-grid {
+    display: grid;
+    grid-template-rows: 2.6fr 1fr;
+}
+
+/* .checkout-menue tr{
+    border-bottom: solid 30px #e3f6fc;
+    padding: 100px;
+}
+
+.checkout-menue td{
+    padding: 20px 10px;
+} */
+
+#checkout-submit {
+    margin: 30px 0;
+    background-color: #6e6e6e;
+    color: white;
+    width: 100%;
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 1.1rem;   
+}

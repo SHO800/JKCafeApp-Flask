@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2J - Cafe</title>
+    <!-- Reset - CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/ress/dist/ress.min.css">
+    <!-- Base - CSS -->
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/animation.css">
+    <!-- INDEX - CSS -->
+    <link rel="stylesheet" href="/static/css/index/index.css">
+</head>
+<body>
+
+    <div class="master-wrapper">
+        <!-- ヘッダー -->
+        <header id="header">
+            <h1 class="site-title">
+                <a href="/">
+                    Home
+                </a>
+            </h1>
+            <nav>
+                <ul>
+                    <li><a href="/register">Register</a></li>
+                    <li><a href="/admin">admin</a></li>
+                    <li><a href="/clear">clear</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <a href="/register">
+            <h1 id="big-title" > JK Cafe </h1>
+        </a>
+
+        <div class="container">
+            <form action="{{ url_for('menues_csv') }}" method="POST" enctype="multipart/form-data">
+                <input type="file" name="file">
+                <input type="submit" value="ファイルを送信する">
+            </form>
+        </div>
+    </div>
+</body>
+</html>
