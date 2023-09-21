@@ -1,6 +1,5 @@
 from flask import Flask, render_template, redirect, request
-from flask_socketio import SocketIO
-from register import app, db
+from register import app, db, socketio
 from register.common.models.menues import MENUES
 from register.common.models.session_menues import SESSION_MENUES
 from register.common.models.checkouts_child import CHECKOUTS_CHILD
@@ -96,7 +95,9 @@ def menues_csv():
     else:
         file = request.files['file']
         file.filename = "menues.csv"
-        file.save(os.path.join('register/static/csv/', file.filename))
+        # file.save(os.path.join('register/static/csv/', file.filename))
+        file.save(os.path.join(__file__, '..', 'register', 'static', 'csv', file.filename))
+        print(os.path.join(__file__, '..', 'register', 'static', 'csv', file.filename) + "aaa")
         menues_csv_db()
         return redirect("/admin")
     
@@ -109,3 +110,17 @@ def delete_session():
 def clear():
     delete_session()
     return redirect("/")
+
+
+@app.route("/display", methods=['GET', 'POST']) # SHO800
+def display():
+    if request.method == 'GET':
+        return render_template("display.html")
+
+    if request.method == 'POST':
+        session_menues = SESSION_MENUES.query.all()
+
+        menues_list = [menue.menue_name for menue in SESSION_MENUES.query.all()]
+        sum_values = [menue.sum_value for menue in SESSION_MENUES.query.all()]
+        sum_value = sum(sum_values)
+        socketio.emit('receive_message', {'message': menues_list})

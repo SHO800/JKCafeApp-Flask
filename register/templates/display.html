@@ -1,10 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Title</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2J - Cafe</title>
+  <!-- Reset - CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/ress/dist/ress.min.css">
+  <!-- Base - CSS -->
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/animation.css">
+  <!-- INDEX - CSS -->
+  <link rel="stylesheet" href="/static/css/index/index.css">
+
+  <!-- socket.ioをインポート -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
 <body>
 
+<div class="master-wrapper">
+  <a href="/register"><h1 id="big-title" > JK Cafe </h1></a>
+
+  {#  ここに表示内容  #}
+  <div class="container">
+    <div class="menu"></div>
+  </div>
+</div>
+
+<script src="/static/js/display.js"></script>
 </body>
 </html>

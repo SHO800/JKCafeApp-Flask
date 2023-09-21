@@ -1,4 +1,6 @@
 import csv
+import os.path
+
 from register import app, db
 from register.common.models.menues import MENUES
 
@@ -9,7 +11,7 @@ def menues_csv_db():
         db.session.delete(menue)
         db.session.commit()
 
-    with open(r'register\static\csv\menues.csv', encoding="utf_8") as f:
+    with open(os.path.join(__file__, r'../static/csv/menues.csv'), encoding="utf_8") as f:
         reader = csv.reader(f)
         csv_datas = [row for row in reader]
         with app.app_context():

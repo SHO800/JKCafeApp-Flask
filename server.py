@@ -1,3 +1,3 @@
-from register import app
+from register import app, socketio
 
-app.run()
+socketio.run(app, allow_unsafe_werkzeug=True)
