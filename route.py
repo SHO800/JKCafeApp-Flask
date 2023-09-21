@@ -1,4 +1,5 @@
 from flask import Flask, render_template, redirect, request
+from flask_socketio import SocketIO
 from register import app, db
 from register.common.models.menues import MENUES
 from register.common.models.session_menues import SESSION_MENUES
