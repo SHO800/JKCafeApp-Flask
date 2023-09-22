@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2J - Cafe</title>
+    <title>2J - Café</title>
     <!-- Reset - CSS -->
     <link rel="stylesheet" href="https://unpkg.com/ress/dist/ress.min.css">
     <!-- Base - CSS -->
     <link rel="stylesheet" href="/static/css/base.css">
-    <link rel="stylesheet" href="/static/css/animation.css">
+{#    <link rel="stylesheet" href="/static/css/animation.css">#}
     <!-- INDEX - CSS -->
     <link rel="stylesheet" href="/static/css/register/register.css">
     <!-- SUM - JS -->
@@ -18,9 +18,7 @@
         <!-- ヘッダー -->
         <header id="header">
             <h1 class="site-title">
-                <a href="/">
-                    Home
-                </a>
+                <a href="/">Home</a>
             </h1>
             <nav>
                 <ul>
@@ -33,7 +31,7 @@
 
         <h1 id="big-title" > お会計 </h1>
 
-        <!--  -->
+        <!-- 左側のメニュー一覧 -->
         <div class="container">
             <div class="grid-box scroll">
                 <table>
@@ -68,6 +66,7 @@
                 </table>
             </div>
 
+{#        右側のリスト#}
             <div class="grid-box scroll y-grid">
                 <div class="grid-top scroll">
                     <table class="checkout-menue" id="session-menues">
@@ -85,8 +84,8 @@
                                     <tr>
                                         <td style="text-align: center;"><input type="text" name="id" value="No . {{ session_menue.id }}" style="width: 50px; color:#6e6e6e;"></td>
                                         <td>{{ session_menue.menue_name }}</td>
-                                        <td style="text-align: center;">{{ session_menue.quantity }}個</td>
                                         <td style="text-align: center;">{{ session_menue.value }}</td>
+                                        <td style="text-align: center;">{{ session_menue.quantity }}個</td>
                                         <td style="text-align: center;">{{ session_menue.sum_value }}</td>
                                         <td style="text-align: center;"><input type="submit" value="削除" class="input-border"></td>
                                     </tr>
@@ -105,11 +104,6 @@
                         <div style="border-bottom: solid 5px #bdbdbd;"></div>
                         <form action="{{ url_for('checkout_submit') }}" method="POST">
                             <input type="submit" name="" id="checkout-submit" value="支払い完了">
-                        </form>
-
-{#                        ディスプレイ用#}
-                        <form action="{{ url_for('checkout_submit') }}" method="POST">
-                          <input type="submit" name="" id="checkout-submit" value="支払い完了">
                         </form>
                     </div>
                 </div>

@@ -19,11 +19,11 @@ def index():
 
 @app.route('/register')
 def register():
+    socketio.emit('regi_display_reload')
     return render_template(
         "register.html",
-        menues = MENUES.query.all(),
-        session_menues = SESSION_MENUES.query.all()
-
+        menues=MENUES.query.all(),
+        session_menues=SESSION_MENUES.query.all()
         )
 
 @app.route('/add_menue', methods=['POST'])
@@ -40,6 +40,7 @@ def add_menue():
         )
         db.session.add(session_menues)
         db.session.commit()
+
         return redirect("/register")
 
 @app.route('/delete_menue', methods=['POST'])
@@ -49,6 +50,7 @@ def delete_menue():
         menue = SESSION_MENUES.query.get(menue_id)
         db.session.delete(menue)
         db.session.commit()
+
         return redirect("/register")
 
 @app.route('/checkout_submit', methods=['POST'])
@@ -79,14 +81,18 @@ def checkout_submit():
             db.session.add(checkout_child)
             db.session.commit()
 
-        SEND(menues_list, sum_value)
+        # LINE送信 一時停止中
+        # SEND(menues_list, sum_value)
 
         delete_session()
+        socketio.emit('regi_display_reload')
         return redirect("/")
+
 
 @app.route('/admin')
 def admin():
     return render_template("admin.html")
+
 
 @app.route('/menues_csv', methods=['GET', 'POST'])
 def menues_csv():
@@ -97,30 +103,41 @@ def menues_csv():
         file.filename = "menues.csv"
         # file.save(os.path.join('register/static/csv/', file.filename))
         file.save(os.path.join(__file__, '..', 'register', 'static', 'csv', file.filename))
-        print(os.path.join(__file__, '..', 'register', 'static', 'csv', file.filename) + "aaa")
         menues_csv_db()
         return redirect("/admin")
-    
+
+
 def delete_session():
     session_menues = SESSION_MENUES.query.all()
     for session_menue in session_menues:
         db.session.delete(session_menue)
         db.session.commit()
+
+
 @app.route("/clear")
 def clear():
     delete_session()
+    socketio.emit('regi_display_reload')
     return redirect("/")
 
 
-@app.route("/display", methods=['GET', 'POST']) # SHO800
-def display():
+@app.route("/display/regi", methods=['GET']) # SHO800
+def regi_display():
     if request.method == 'GET':
-        return render_template("display.html")
+        return render_template("regi_display.html", session_menues=SESSION_MENUES.query.all())
 
-    if request.method == 'POST':
-        session_menues = SESSION_MENUES.query.all()
 
-        menues_list = [menue.menue_name for menue in SESSION_MENUES.query.all()]
-        sum_values = [menue.sum_value for menue in SESSION_MENUES.query.all()]
-        sum_value = sum(sum_values)
-        socketio.emit('receive_message', {'message': menues_list})
+@app.route("/display/kitchen", methods=['GET']) # SHO800
+def kitchen_display():
+    if request.method == 'GET':
+        return render_template("kitchen_display.html", session_menues=SESSION_MENUES.query.all())
+
+
+@socketio.on("connect")
+def handle_connect():
+    socketio.emit('client_echo', {'msg': 'server connected!'})
+
+
+@socketio.on('server_echo')
+def handle_server_echo(msg):
+    print('echo: ' + str(msg))
