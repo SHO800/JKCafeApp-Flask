@@ -1,16 +1,6 @@
 #big-title {
-    margin: 60px auto 2em auto;
-    text-align: center;
+    margin: 1em auto;
     font-size: 2rem;
-    color: white;
-    background-image: linear-gradient(90deg, rgb(236, 187, 236), rgb(139, 222, 231), rgb(187, 196, 236));
-
-    padding: 1rem;
-    border-radius: 40px;
-    box-shadow: 0 0px 50px 0 rgba(197, 197, 197, 0.5);
-
-    background-size: 800% 800%;
-    animation: GradietionAnimation 9s ease infinite;
 }
 
 .container {

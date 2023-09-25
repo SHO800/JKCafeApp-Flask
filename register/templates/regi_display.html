@@ -61,16 +61,5 @@
 </div>
 
 <script src="/static/js/display/regi.js"></script>
-<script type="text/javascript">
-    window.onload = function () {
-        var tableElem = document.getElementById('session-menues');
-        var rowElems = tableElem.rows;
-        var price = 0;
-        for (i = 1, len = rowElems.length; i < len; i++) {
-            price += parseInt(rowElems[i].cells[3].innerText);
-        }
-        document.getElementById('sum-value').innerText = `${price}円`;
-    }
-</script>
 </body>
 </html>

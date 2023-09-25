@@ -8,11 +8,9 @@
   <link rel="stylesheet" href="https://unpkg.com/ress/dist/ress.min.css">
   <!-- Base - CSS -->
   <link rel="stylesheet" href="/static/css/base.css">
-{#  <link rel="stylesheet" href="/static/css/animation.css">#}
   <!-- INDEX - CSS -->
   <link rel="stylesheet" href="/static/css/index/index.css">
   <link rel="stylesheet" href="/static/css/display/kitchen.css">
-
   <!-- socket.ioをインポート -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
@@ -24,6 +22,7 @@
   {#  ここに表示内容  #}
     <div class="scroll y-grid">
       <div class="grid-top scroll">
+      {% for order in orders %}
         <table class="checkout-menue" id="session-menues">
           <tbody>
           <tr>
@@ -32,43 +31,23 @@
             <th>個数</th>
             <th>金額</th>
           </tr>
-          {% for session_menue in session_menues %}
-            <form action="{{ url_for('delete_menue') }}" method="POST">
-              <tr>
-                <td>{{ session_menue.menue_name }}</td>
-                <td style="text-align: center;">{{ session_menue.value }}</td>
-                <td style="text-align: center;">{{ session_menue.quantity }}個</td>
-                <td style="text-align: center;">{{ session_menue.sum_value }}</td>
-              </tr>
-            </form>
+          {% for item in order.item %}
+            <tr>
+              <td>{{ item.menue_name }}</td>
+              <td style="text-align: center;">{{ item.value }}</td>
+              <td style="text-align: center;">{{ item.quantity }}個</td>
+              <td style="text-align: center;">{{ item.sum_value }}</td>
+            </tr>
           {% endfor %}
           </tbody>
         </table>
+      {% endfor %}
       </div>
 
-      <div class="grid-bottom" style="position: fixed; bottom: 5rem; width: 100%; left: 0">
-        <div class="checkout" style="margin: auto;  width: 90%">
-          <div style="display: flex; align-items: end; justify-content: space-between">
-            <p>合計</p>
-            <p style="padding-right: 50px; font-size: 2rem;" id="sum-value"> - </p>
-          </div>
-          <div style="border-bottom: solid 5px #bdbdbd;"></div>
-        </div>
-      </div>
   </div>
 </div>
 
-<script src="/static/js/display.js"></script>
-<script type="text/javascript">
-    window.onload = function () {
-        var tableElem = document.getElementById('session-menues');
-        var rowElems = tableElem.rows;
-        var price = 0;
-        for (i = 1, len = rowElems.length; i < len; i++) {
-            price += parseInt(rowElems[i].cells[3].innerText);
-        }
-        document.getElementById('sum-value').innerText = `${price}円`;
-    }
-</script>
+<script src="/static/js/display/kitchen.js"></script>
+
 </body>
 </html>

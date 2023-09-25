@@ -2,8 +2,8 @@ from flask import Flask, render_template, redirect, request
 from register import app, db, socketio
 from register.common.models.menues import MENUES
 from register.common.models.session_menues import SESSION_MENUES
-from register.common.models.checkouts_child import CHECKOUTS_CHILD
-from register.common.models.checkouts_parent import CHECKOUTS_PARENT
+from register.common.models.orders import OrderItem
+from register.common.models.orders import Order
 from register.csv_to_DB import menues_csv_db
 from werkzeug.security import generate_password_hash
 import os
@@ -64,15 +64,16 @@ def checkout_submit():
 
         now_time = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
 
-        checkout_parent = CHECKOUTS_PARENT(
+        checkout_parent = Order(
             checkouted_at=now_time,
-            total_value=sum_value
+            total_value=sum_value,
+            provided=0,
         )
         db.session.add(checkout_parent)
         db.session.commit()
 
         for session_menue in session_menues:
-            checkout_child = CHECKOUTS_CHILD(
+            checkout_child = OrderItem(
                 parent=now_time,
                 menue_name=session_menue.menue_name,
                 quantity=session_menue.quantity,
@@ -86,6 +87,7 @@ def checkout_submit():
 
         delete_session()
         socketio.emit('regi_display_reload')
+        socketio.emit('kitchen_display_reload')
         return redirect("/")
 
 
@@ -118,6 +120,7 @@ def delete_session():
 def clear():
     delete_session()
     socketio.emit('regi_display_reload')
+    socketio.emit('kitchen_display_reload')
     return redirect("/")
 
 
@@ -130,7 +133,10 @@ def regi_display():
 @app.route("/display/kitchen", methods=['GET']) # SHO800
 def kitchen_display():
     if request.method == 'GET':
-        return render_template("kitchen_display.html", session_menues=SESSION_MENUES.query.all())
+        active_orders = Order.query.filter(Order.provided != 1).all()
+        print(active_orders[0].item)
+
+        return render_template("kitchen_display.html", orders=active_orders)
 
 
 @socketio.on("connect")

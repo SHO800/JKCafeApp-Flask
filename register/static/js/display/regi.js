@@ -1,3 +1,4 @@
+//ソケット通信を行うやつ
 document.addEventListener("DOMContentLoaded", (event) => {
     //表示領域を取得しておく
     const messageBox = document.getElementById("content");
@@ -23,3 +24,14 @@ document.addEventListener("DOMContentLoaded", (event) => {
         location.reload()
     })
 })
+
+// 合計金額を表示するやつ
+window.onload = function () {
+    var tableElem = document.getElementById('session-menues');
+    var rowElems = tableElem.rows;
+    var price = 0;
+    for (i = 1, len = rowElems.length; i < len; i++) {
+        price += parseInt(rowElems[i].cells[3].innerText);
+    }
+    document.getElementById('sum-value').innerText = `${price}円`;
+}
