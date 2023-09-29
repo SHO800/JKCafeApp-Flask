@@ -7,7 +7,6 @@ from register.common.models.session_menues import SESSION_MENUES
 from register.common.models.orders import OrderItem
 from register.common.models.orders import Order
 from register.csv_to_DB import menues_csv_db
-from werkzeug.security import generate_password_hash
 import os
 import datetime
 import pytz
