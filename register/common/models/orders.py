@@ -13,5 +13,6 @@ class OrderItem(db.Model):
     parent = db.Column(db.DateTime, db.ForeignKey('order.checkouted_at'))
 
     menue_name = db.Column(db.String(32))
+    short_name = db.Column(db.String(32))
     quantity = db.Column(db.Integer)
     sum_value = db.Column(db.Integer)

@@ -5,4 +5,5 @@ class MENUES(db.Model):
     
     menue_name = db.Column(db.String(32), nullable=False)
     value = db.Column(db.Integer())
+    short_name = db.Column(db.String(32))
     text = db.Column(db.String(128))

@@ -8,8 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/ress/dist/ress.min.css">
   <!-- Base - CSS -->
   <link rel="stylesheet" href="/static/css/base.css">
-  <!-- INDEX - CSS -->
-  <link rel="stylesheet" href="/static/css/index/index.css">
+  <!-- KITCHEN - CSS -->
   <link rel="stylesheet" href="/static/css/display/kitchen.css">
   <!-- socket.ioをインポート -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
@@ -20,31 +19,30 @@
   <a href="/register"><h1 id="big-title" > JK Café - Kitchen </h1></a>
 
   {#  ここに表示内容  #}
-    <div class="scroll y-grid">
-      <div class="grid-top scroll">
-      {% for order in orders %}
-        <table class="checkout-menue" id="session-menues">
-          <tbody>
-          <tr>
-            <th style="text-align: left;">商品名</th>
-            <th>単価</th>
-            <th>個数</th>
-            <th>金額</th>
-          </tr>
-          {% for item in order.item %}
-            <tr>
-              <td>{{ item.menue_name }}</td>
-              <td style="text-align: center;">{{ item.value }}</td>
-              <td style="text-align: center;">{{ item.quantity }}個</td>
-              <td style="text-align: center;">{{ item.sum_value }}</td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      {% endfor %}
-      </div>
+  <div class="wrapper">
+    {% for order in orders %}
+      <div class="container">
+        <div class="info">
+          <div>
+            <span>注文日時: </span>
+            <span id="datetime"></span>
+          </div>
+          <div>
+            <span id="elapsedtime"> </span>
+            <span>分前</span>
+          </div>
 
+        </div>
+        {% for item in order.item %}
+          <div class="item">
+            {{ item.short_name }}
+            {{ item.quantity }}個
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
   </div>
+
 </div>
 
 <script src="/static/js/display/kitchen.js"></script>

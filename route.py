@@ -1,4 +1,6 @@
-from flask import Flask, render_template, redirect, request
+import json
+
+from flask import Flask, render_template, redirect, request, make_response, jsonify
 from register import app, db, socketio
 from register.common.models.menues import MENUES
 from register.common.models.session_menues import SESSION_MENUES
@@ -33,7 +35,8 @@ def add_menue():
         quantity = int(request.form.get("quantity"))
         session_menues = SESSION_MENUES(
             menue_name=MENUES.query.get(menue_id).menue_name, 
-            menue_id=menue_id, 
+            menue_id=menue_id,
+            short_name=MENUES.query.get(menue_id).short_name,
             quantity=quantity, 
             value = MENUES.query.get(menue_id).value,
             sum_value=MENUES.query.get(menue_id).value * quantity
@@ -76,6 +79,7 @@ def checkout_submit():
             checkout_child = OrderItem(
                 parent=now_time,
                 menue_name=session_menue.menue_name,
+                short_name=session_menue.short_name,
                 quantity=session_menue.quantity,
                 sum_value=session_menue.sum_value
             )
@@ -134,7 +138,6 @@ def regi_display():
 def kitchen_display():
     if request.method == 'GET':
         active_orders = Order.query.filter(Order.provided != 1).all()
-        print(active_orders[0].item)
 
         return render_template("kitchen_display.html", orders=active_orders)
 
@@ -147,3 +150,30 @@ def handle_connect():
 @socketio.on('server_echo')
 def handle_server_echo(msg):
     print('echo: ' + str(msg))
+
+@app.route('/menus', methods=['GET'])
+def menus():
+    # params = request.args
+
+    response = []
+    menus = MENUES.query.all()
+    for menu in menus:
+        response.append({
+            "id": menu.id,
+            "menu_name": menu.menue_name,
+            "value": menu.value,
+            "short_name": menu.short_name,
+            "text": menu.text,
+        })
+    response = json.dumps(response)
+    print(response)
+
+    # return make_response(jsonify(response))
+    return make_response(response)
+
+
+    # socketio.emit('regi_display_reload')
+    # return render_template(
+    #     menues=MENUES.query.all(),
+    #     session_menues=SESSION_MENUES.query.all()
+    # )
