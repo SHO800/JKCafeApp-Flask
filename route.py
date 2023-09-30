@@ -154,16 +154,15 @@ def handle_server_echo(msg):
 def menus():
     # params = request.args
 
-    response = []
+    response = {}
     menus = MENUES.query.all()
     for menu in menus:
-        response.append({
-            "id": menu.id,
+        response[menu.id] = {
             "menu_name": menu.menue_name,
             "value": menu.value,
             "short_name": menu.short_name,
             "text": menu.text,
-        })
+        }
     response = json.dumps(response)
     print(response)
 
