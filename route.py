@@ -2,7 +2,7 @@ import json
 
 from flask import Flask, render_template, redirect, request, make_response, jsonify
 from register import app, db, socketio
-from register.common.models.menues import MENUES
+from register.common.models.menues import MENUES, Toppings
 from register.common.models.session_menues import SESSION_MENUES
 from register.common.models.orders import OrderItem
 from register.common.models.orders import Order
@@ -156,16 +156,18 @@ def menus():
 
     response = {}
     menus = MENUES.query.all()
+    toppings = Toppings.query.all()
     for menu in menus:
+        toppings_of_menu = list(filter(lambda item: item.parent == menu.id, toppings))
+        toppings_of_menu = {item.topping_name:{"value":item.value} for item in toppings_of_menu}
         response[menu.id] = {
             "menu_name": menu.menue_name,
             "value": menu.value,
             "short_name": menu.short_name,
             "text": menu.text,
+            "topping": toppings_of_menu
         }
     response = json.dumps(response)
-    print(response)
-
     # return make_response(jsonify(response))
     return make_response(response)
 
