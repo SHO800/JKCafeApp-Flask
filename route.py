@@ -183,10 +183,6 @@ def display_bridge(msg):
     emit("temp_order_data", data_json, to=str(msg["clientId"]), namespace='/display/register')
     pass
 
-@socketio.on('my event')
-def handle_my_custom_event(data):
-    emit('my response', data, broadcast=True)
-
 
 @app.route('/menus', methods=['GET'])
 def menus():
