@@ -3,7 +3,7 @@ import json
 import os
 
 import pytz
-from flask import render_template, redirect, request, make_response
+from flask import render_template, redirect, request, make_response, jsonify
 from flask_socketio import join_room, emit
 
 from register import app, db, socketio
@@ -147,16 +147,19 @@ def kitchen_display():
 
 
 room_id = 0
+@app.route("/getClientId", methods=['GET'])
+def give_client_id():
+    global room_id
+    room_id += 1
+    print("told_register_clientId", room_id)
+    return jsonify({'clientId': room_id})
+
 
 
 @socketio.on("connect", namespace='/register')
 def handle_connect():
-    global room_id
-    room_id += 1
-    # socketio.sleep(1)
-    print("joinned", room_id)
-    join_room(room_id)
-    socketio.emit('notice_join', {'id': room_id}, namespace='/register')
+    # socketio.emit('notice_join', {'id': room_id}, namespace='/register')
+    pass
 
 
 @socketio.on("connect", namespace='/display/register')
