@@ -20,50 +20,11 @@ def index():
         return render_template("index.html")
 
 
-# @app.route('/register')
-# def register():
-#     socketio.emit('regi_display_reload')
-#     return render_template(
-#         "register.html",
-#         menues=MENUES.query.all(),
-#         session_menues=SESSION_MENUES.query.all()
-#     )
-
-
-@app.route('/add_menue', methods=['POST'])
-def add_menue():
-    if request.method == 'POST':
-        menue_id = int(request.form.get("id")[5:])
-        quantity = int(request.form.get("quantity"))
-        session_menues = SESSION_MENUES(
-            menue_name=MENUES.query.get(menue_id).menue_name,
-            menue_id=menue_id,
-            short_name=MENUES.query.get(menue_id).short_name,
-            quantity=quantity,
-            value=MENUES.query.get(menue_id).value,
-            sum_value=MENUES.query.get(menue_id).value * quantity
-        )
-        db.session.add(session_menues)
-        db.session.commit()
-
-        return redirect("/register")
-
-
-@app.route('/delete_menue', methods=['POST'])
-def delete_menue():
-    if request.method == 'POST':
-        menue_id = int(request.form.get("id")[5:])
-        menue = SESSION_MENUES.query.get(menue_id)
-        db.session.delete(menue)
-        db.session.commit()
-
-        return redirect("/register")
-
-
-@app.route('/checkout_submit', methods=['POST'])
+@app.route('/checkout-submit', methods=['POST'])
 def checkout_submit():
     if request.method == 'POST':
-        session_menues = SESSION_MENUES.query.all()
+        # session_menues = SESSION_MENUES.query.all()
+        return request.get_data()
 
         menues_list = [menue.menue_name for menue in SESSION_MENUES.query.all()]
         sum_values = [menue.sum_value for menue in SESSION_MENUES.query.all()]
@@ -104,7 +65,7 @@ def admin():
     return render_template("admin.html")
 
 
-@app.route('/menues_csv', methods=['GET', 'POST'])
+@app.route('/menues-csv', methods=['GET', 'POST'])
 def menues_csv():
     if request.method == 'GET':
         return redirect("/admin")
@@ -124,36 +85,15 @@ def delete_session():
         db.session.commit()
 
 
-@app.route("/clear")
-def clear():
-    delete_session()
-    socketio.emit('regi_display_reload')
-    socketio.emit('kitchen_display_reload')
-    return redirect("/")
-
-
-@app.route("/display/regi", methods=['GET'])  # SHO800
-def regi_display():
-    if request.method == 'GET':
-        return render_template("regi_display.html", session_menues=SESSION_MENUES.query.all())
-
-
-@app.route("/display/kitchen", methods=['GET'])  # SHO800
-def kitchen_display():
-    if request.method == 'GET':
-        active_orders = Order.query.filter(Order.provided != 1).all()
-
-        return render_template("kitchen_display.html", orders=active_orders)
-
-
 room_id = 0
-@app.route("/getClientId", methods=['GET'])
+
+
+@app.route("/client-id", methods=['GET'])
 def give_client_id():
     global room_id
     room_id += 1
     print("told_register_clientId", room_id)
     return jsonify({'clientId': room_id})
-
 
 
 @socketio.on("connect", namespace='/register')
@@ -213,3 +153,62 @@ def menus():
     #     menues=MENUES.query.all(),
     #     session_menues=SESSION_MENUES.query.all()
     # )
+
+# @app.route('/register')
+# def register():
+#     socketio.emit('regi_display_reload')
+#     return render_template(
+#         "register.html",
+#         menues=MENUES.query.all(),
+#         session_menues=SESSION_MENUES.query.all()
+#     )
+
+
+# @app.route('/add_menue', methods=['POST'])
+# def add_menue():
+#     if request.method == 'POST':
+#         menue_id = int(request.form.get("id")[5:])
+#         quantity = int(request.form.get("quantity"))
+#         session_menues = SESSION_MENUES(
+#             menue_name=MENUES.query.get(menue_id).menue_name,
+#             menue_id=menue_id,
+#             short_name=MENUES.query.get(menue_id).short_name,
+#             quantity=quantity,
+#             value=MENUES.query.get(menue_id).value,
+#             sum_value=MENUES.query.get(menue_id).value * quantity
+#         )
+#         db.session.add(session_menues)
+#         db.session.commit()
+#
+#         return redirect("/register")
+
+# @app.route('/delete_menue', methods=['POST'])
+# def delete_menue():
+#     if request.method == 'POST':
+#         menue_id = int(request.form.get("id")[5:])
+#         menue = SESSION_MENUES.query.get(menue_id)
+#         db.session.delete(menue)
+#         db.session.commit()
+#
+#         return redirect("/register")
+
+# @app.route("/clear")
+# def clear():
+#     delete_session()
+#     socketio.emit('regi_display_reload')
+#     socketio.emit('kitchen_display_reload')
+#     return redirect("/")
+
+
+# @app.route("/display/regi", methods=['GET'])  # SHO800
+# def regi_display():
+#     if request.method == 'GET':
+#         return render_template("regi_display.html", session_menues=SESSION_MENUES.query.all())
+
+
+# @app.route("/display/kitchen", methods=['GET'])  # SHO800
+# def kitchen_display():
+#     if request.method == 'GET':
+#         active_orders = Order.query.filter(Order.provided != 1).all()
+#
+#         return render_template("kitchen_display.html", orders=active_orders)
