@@ -7,11 +7,10 @@ from flask import render_template, redirect, request, make_response, jsonify
 from flask_socketio import join_room, emit
 
 from register import app, db, socketio
-from register.common.models.menues import MENUES, Toppings
+from register.common.models.menus import Menus, Toppings
 from register.common.models.orders import Order
 from register.common.models.orders import OrderItem
-from register.common.models.session_menues import SESSION_MENUES
-from register.csv_to_DB import menues_csv_db
+from register.csv_to_DB import menus_csv_db
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -23,36 +22,36 @@ def index():
 @app.route('/checkout-submit', methods=['POST'])
 def checkout_submit():
     if request.method == 'POST':
-        # session_menues = SESSION_MENUES.query.all()
-        return request.get_data()
-
-        menues_list = [menue.menue_name for menue in SESSION_MENUES.query.all()]
-        sum_values = [menue.sum_value for menue in SESSION_MENUES.query.all()]
-        sum_value = sum(sum_values)
-
+        datas = request.get_json()
+        print(datas)
         now_time = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
 
+        sum_value = sum([data["sum"] for data in datas])
+
         checkout_parent = Order(
-            checkouted_at=now_time,
+            checked_out_at=now_time,
             total_value=sum_value,
             provided=0,
         )
+        print(sum_value)
+
+        return datas
         db.session.add(checkout_parent)
         db.session.commit()
 
-        for session_menue in session_menues:
+        for session_menu in session_menus:
             checkout_child = OrderItem(
                 parent=now_time,
-                menue_name=session_menue.menue_name,
-                short_name=session_menue.short_name,
-                quantity=session_menue.quantity,
-                sum_value=session_menue.sum_value
+                menu_name=session_menu.menu_name,
+                short_name=session_menu.short_name,
+                quantity=session_menu.quantity,
+                sum_value=session_menu.sum_value
             )
             db.session.add(checkout_child)
             db.session.commit()
 
         # LINE送信 一時停止中
-        # SEND(menues_list, sum_value)
+        # SEND(menus_list, sum_value)
 
         delete_session()
         socketio.emit('regi_display_reload')
@@ -65,24 +64,24 @@ def admin():
     return render_template("admin.html")
 
 
-@app.route('/menues-csv', methods=['GET', 'POST'])
-def menues_csv():
+@app.route('/menus-csv', methods=['GET', 'POST'])
+def menus_csv():
     if request.method == 'GET':
         return redirect("/admin")
     else:
         file = request.files['file']
-        file.filename = "menues.csv"
+        file.filename = "menus.csv"
         # file.save(os.path.join('register/static/csv/', file.filename))
         file.save(os.path.join(__file__, '..', 'register', 'static', 'csv', file.filename))
-        menues_csv_db()
+        menus_csv_db()
         return redirect("/admin")
 
 
-def delete_session():
-    session_menues = SESSION_MENUES.query.all()
-    for session_menue in session_menues:
-        db.session.delete(session_menue)
-        db.session.commit()
+# def delete_session():
+#     session_menus = SESSION_MENUES.query.all()
+#     for session_menu in session_menus:
+#         db.session.delete(session_menu)
+#         db.session.commit()
 
 
 room_id = 0
@@ -132,13 +131,13 @@ def menus():
     # params = request.args
 
     response = {}
-    menus = MENUES.query.all()
+    menus = Menus.query.all()
     toppings = Toppings.query.all()
     for menu in menus:
         toppings_of_menu = list(filter(lambda item: item.parent == menu.id, toppings))
         toppings_of_menu = {item.topping_name: {"value": item.value} for item in toppings_of_menu}
         response[menu.id] = {
-            "menu_name": menu.menue_name,
+            "menu_name": menu.menu_name,
             "value": menu.value,
             "short_name": menu.short_name,
             "text": menu.text,
@@ -150,8 +149,8 @@ def menus():
 
     # socketio.emit('regi_display_reload')
     # return render_template(
-    #     menues=MENUES.query.all(),
-    #     session_menues=SESSION_MENUES.query.all()
+    #     menus=Menus.query.all(),
+    #     session_menus=SESSION_MENUES.query.all()
     # )
 
 # @app.route('/register')
@@ -159,35 +158,35 @@ def menus():
 #     socketio.emit('regi_display_reload')
 #     return render_template(
 #         "register.html",
-#         menues=MENUES.query.all(),
-#         session_menues=SESSION_MENUES.query.all()
+#         menus=Menus.query.all(),
+#         session_menus=SESSION_MENUES.query.all()
 #     )
 
 
-# @app.route('/add_menue', methods=['POST'])
-# def add_menue():
+# @app.route('/add_menu', methods=['POST'])
+# def add_menu():
 #     if request.method == 'POST':
-#         menue_id = int(request.form.get("id")[5:])
+#         menu_id = int(request.form.get("id")[5:])
 #         quantity = int(request.form.get("quantity"))
-#         session_menues = SESSION_MENUES(
-#             menue_name=MENUES.query.get(menue_id).menue_name,
-#             menue_id=menue_id,
-#             short_name=MENUES.query.get(menue_id).short_name,
+#         session_menus = SESSION_MENUES(
+#             menu_name=Menus.query.get(menu_id).menu_name,
+#             menu_id=menu_id,
+#             short_name=Menus.query.get(menu_id).short_name,
 #             quantity=quantity,
-#             value=MENUES.query.get(menue_id).value,
-#             sum_value=MENUES.query.get(menue_id).value * quantity
+#             value=Menus.query.get(menu_id).value,
+#             sum_value=Menus.query.get(menu_id).value * quantity
 #         )
-#         db.session.add(session_menues)
+#         db.session.add(session_menus)
 #         db.session.commit()
 #
 #         return redirect("/register")
 
-# @app.route('/delete_menue', methods=['POST'])
-# def delete_menue():
+# @app.route('/delete_menu', methods=['POST'])
+# def delete_menu():
 #     if request.method == 'POST':
-#         menue_id = int(request.form.get("id")[5:])
-#         menue = SESSION_MENUES.query.get(menue_id)
-#         db.session.delete(menue)
+#         menu_id = int(request.form.get("id")[5:])
+#         menu = SESSION_MENUES.query.get(menu_id)
+#         db.session.delete(menu)
 #         db.session.commit()
 #
 #         return redirect("/register")
@@ -203,7 +202,7 @@ def menus():
 # @app.route("/display/regi", methods=['GET'])  # SHO800
 # def regi_display():
 #     if request.method == 'GET':
-#         return render_template("regi_display.html", session_menues=SESSION_MENUES.query.all())
+#         return render_template("regi_display.html", session_menus=SESSION_MENUES.query.all())
 
 
 # @app.route("/display/kitchen", methods=['GET'])  # SHO800
