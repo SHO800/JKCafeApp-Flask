@@ -5,11 +5,11 @@ import os
 import pytz
 from flask import render_template, redirect, request, make_response, jsonify
 from flask_socketio import join_room, emit
+import uuid
 
 from register import app, db, socketio
 from register.common.models.menus import Menus, Toppings
-from register.common.models.orders import Order
-from register.common.models.orders import OrderItem
+from register.common.models.orders import Order, OrderItem, Options
 from register.csv_to_DB import menus_csv_db
 
 
@@ -22,38 +22,60 @@ def index():
 @app.route('/checkout-submit', methods=['POST'])
 def checkout_submit():
     if request.method == 'POST':
-        datas = request.get_json()
-        print(datas)
+        order_datas = request.get_json()
         now_time = datetime.datetime.now(pytz.timezone('Asia/Tokyo'))
 
-        sum_value = sum([data["sum"] for data in datas])
+        sum_value = sum([data["sum"] for data in order_datas])
 
-        checkout_parent = Order(
+        order_uuid = str(uuid.uuid4())
+        order_parent = Order(
+            uuid=order_uuid,
             checked_out_at=now_time,
             total_value=sum_value,
             provided=0,
         )
-        print(sum_value)
 
-        return datas
-        db.session.add(checkout_parent)
-        db.session.commit()
+        db.session.add(order_parent)
 
-        for session_menu in session_menus:
-            checkout_child = OrderItem(
-                parent=now_time,
-                menu_name=session_menu.menu_name,
-                short_name=session_menu.short_name,
-                quantity=session_menu.quantity,
-                sum_value=session_menu.sum_value
+        for order_data in order_datas:
+            order_child_uuid = str(uuid.uuid4())
+            order_child = OrderItem(
+                uuid=order_child_uuid,
+                parent=order_uuid,
+                menu_id=int(order_data['id']),
+                menu_name=order_data['menu_name'],
+                short_name=order_data['short_name'],
+                value=int(order_data['value']),
+                quantity=int(order_data['quantity']),
+                sum=int(order_data['sum']),
             )
-            db.session.add(checkout_child)
-            db.session.commit()
+            db.session.add(order_child)
 
+            if order_data['topping']:
+                for order_topping_name in order_data['topping']:
+                    order_topping = order_data['topping'][order_topping_name]
+                    if order_topping["quantity"] <= 0:
+                        continue
+
+                    order_option_uuid = str(uuid.uuid4())
+                    order_option = Options(
+                        uuid=order_option_uuid,
+                        parent=order_child_uuid,
+                        option_name=order_topping_name,
+                        value=int(order_topping["value"]),
+                        quantity=int(order_topping["quantity"]),
+                        coupon_amount=int(order_topping["couponAmount"])
+                    )
+                    db.session.add(order_option)
+
+
+        db.session.commit()
+        return order_datas
         # LINE送信 一時停止中
         # SEND(menus_list, sum_value)
 
-        delete_session()
+
+        db.session.commit()
         socketio.emit('regi_display_reload')
         socketio.emit('kitchen_display_reload')
         return redirect("/")
