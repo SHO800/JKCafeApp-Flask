@@ -1,11 +1,12 @@
 import datetime
 import json
 import os
+import uuid
 
 import pytz
+from typing import List
 from flask import render_template, redirect, request, make_response, jsonify
 from flask_socketio import join_room, emit
-import uuid
 
 from register import app, db, socketio
 from register.common.models.menus import Menus, Toppings
@@ -68,12 +69,10 @@ def checkout_submit():
                     )
                     db.session.add(order_option)
 
-
         db.session.commit()
         return order_datas
         # LINE送信 一時停止中
         # SEND(menus_list, sum_value)
-
 
         db.session.commit()
         socketio.emit('regi_display_reload')
@@ -117,37 +116,6 @@ def give_client_id():
     return jsonify({'clientId': room_id})
 
 
-@socketio.on("connect", namespace='/register')
-def handle_connect():
-    # socketio.emit('notice_join', {'id': room_id}, namespace='/register')
-    pass
-
-
-@socketio.on("connect", namespace='/display/register')
-def handle_connect():
-    pass
-
-
-@socketio.on("join", namespace='/display/register')
-def join_register_display(msg):
-    join_room(msg["clientId"])
-    print("join", msg["clientId"])
-
-
-@socketio.on('server_echo')
-def handle_server_echo(msg):
-    print('echo: ' + str(msg), )
-
-
-@socketio.on('temp_order_data', namespace='/register')
-def display_bridge(msg):
-    data_json = json.loads(msg["data"])
-    print("to", msg["clientId"])
-
-    emit("temp_order_data", data_json, to=str(msg["clientId"]), namespace='/display/register')
-    pass
-
-
 @app.route('/menus', methods=['GET'])
 def menus():
     # params = request.args
@@ -174,6 +142,48 @@ def menus():
     #     menus=Menus.query.all(),
     #     session_menus=SESSION_MENUES.query.all()
     # )
+
+
+@socketio.on("connect", namespace='/register')
+def handle_connect():
+    pass
+
+
+@socketio.on("connect", namespace='/display/register')
+def handle_connect():
+    pass
+
+
+@socketio.on("connect", namespace="/display/kitchen")
+def handle_connect():
+    print("kitchen_connection")
+    send_kitchen_orders()
+    pass
+
+
+@socketio.on("join", namespace='/display/register')
+def join_register_display(msg):
+    join_room(msg["clientId"])
+    print("join", msg["clientId"])
+
+
+@socketio.on('temp_order_data', namespace='/register')
+def display_bridge(msg):
+    data_json = json.loads(msg["data"])
+    print("to", msg["clientId"])
+
+    emit("temp_order_data", data_json, to=str(msg["clientId"]), namespace='/display/register')
+    pass
+
+
+def send_kitchen_orders():
+    send_data = []
+
+    active_orders: List[Order] = Order.query.filter(Order.provided != 1).all()
+    for order in active_orders:
+        send_data.append({
+            ""
+        })
 
 # @app.route('/register')
 # def register():
