@@ -70,14 +70,13 @@ def checkout_submit():
                     db.session.add(order_option)
 
         db.session.commit()
-        return order_datas
+
+        print("order_added!")
+        send_kitchen_orders()
         # LINE送信 一時停止中
         # SEND(menus_list, sum_value)
+        return order_datas
 
-        db.session.commit()
-        socketio.emit('regi_display_reload')
-        socketio.emit('kitchen_display_reload')
-        return redirect("/")
 
 
 @app.route('/admin')
@@ -97,12 +96,6 @@ def menus_csv():
         menus_csv_db()
         return redirect("/admin")
 
-
-# def delete_session():
-#     session_menus = SESSION_MENUES.query.all()
-#     for session_menu in session_menus:
-#         db.session.delete(session_menu)
-#         db.session.commit()
 
 
 room_id = 0
@@ -181,9 +174,45 @@ def send_kitchen_orders():
 
     active_orders: List[Order] = Order.query.filter(Order.provided != 1).all()
     for order in active_orders:
+        items = []
+        for item in order.item:
+            options = []
+            for option in item.option:
+                options.append({
+                    "uuid": option.uuid,
+                    "option_name": option.option_name,
+                    "quantity": option.quantity,
+                })
+
+            items.append({
+                "uuid": item.uuid,
+                "menu_id": item.menu_id,
+                "menu_name": item.menu_name,
+                "quantity": item.quantity,
+                "option": options,
+            })
+
+        checked_out_at = order.checked_out_at.strftime('%y/%m/%d %H:%M:%S')
+        # print(checked_out_at)
+
         send_data.append({
-            ""
+            "uuid": order.uuid,
+            "orderedAt": checked_out_at,
+            "items": items,
         })
+    # print(send_data)
+
+    socketio.emit("kitchen_order_data", send_data, namespace='/display/kitchen')
+
+
+@socketio.on('kitchen_order_provided', namespace='/display/kitchen')
+def kitchen_order_provided(msg):
+    print("kitchen_order_provided", msg)
+    order = Order.query.get(msg)
+    order.provided = 1
+    db.session.commit()
+    send_kitchen_orders()
+
 
 # @app.route('/register')
 # def register():
