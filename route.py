@@ -2,12 +2,13 @@ import datetime
 import json
 import os
 import uuid
+from typing import List
 
 import pytz
-from typing import List
 from flask import render_template, redirect, request, make_response, jsonify
 from flask_socketio import join_room, emit
 
+from register.controllers.line_notification import send
 from register import app, db, socketio
 from register.common.models.menus import Menus, Toppings
 from register.common.models.orders import Order, OrderItem, Options
@@ -72,11 +73,10 @@ def checkout_submit():
         db.session.commit()
 
         print("order_added!")
-        send_kitchen_orders()
+        send_data = send_kitchen_orders()
         # LINE送信 一時停止中
-        # SEND(menus_list, sum_value)
+        send(send_data)
         return order_datas
-
 
 
 @app.route('/admin')
@@ -91,11 +91,10 @@ def menus_csv():
     else:
         file = request.files['file']
         file.filename = "menus.csv"
-        # file.save(os.path.join('register/static/csv/', file.filename))
+
         file.save(os.path.join(__file__, '..', 'register', 'static', 'csv', file.filename))
         menus_csv_db()
         return redirect("/admin")
-
 
 
 room_id = 0
@@ -127,14 +126,7 @@ def menus():
             "topping": toppings_of_menu
         }
     response = json.dumps(response)
-    # return make_response(jsonify(response))
     return make_response(response)
-
-    # socketio.emit('regi_display_reload')
-    # return render_template(
-    #     menus=Menus.query.all(),
-    #     session_menus=SESSION_MENUES.query.all()
-    # )
 
 
 @socketio.on("connect", namespace='/register')
@@ -144,29 +136,27 @@ def handle_connect():
 
 @socketio.on("connect", namespace='/display/register')
 def handle_connect():
+    print("レジのディスプレイが接続しました")
     pass
 
 
 @socketio.on("connect", namespace="/display/kitchen")
 def handle_connect():
-    print("kitchen_connection")
+    print("キッチンのディスプレイが接続しました")
     send_kitchen_orders()
-    pass
 
 
 @socketio.on("join", namespace='/display/register')
 def join_register_display(msg):
     join_room(msg["clientId"])
-    print("join", msg["clientId"])
+    print("レジのディスプレイが次のルームに参加しました: ", msg["clientId"])
 
 
 @socketio.on('temp_order_data', namespace='/register')
 def display_bridge(msg):
     data_json = json.loads(msg["data"])
-    print("to", msg["clientId"])
-
+    print(f"{msg['clientId']}番レジの情報が更新されました")
     emit("temp_order_data", data_json, to=str(msg["clientId"]), namespace='/display/register')
-    pass
 
 
 def send_kitchen_orders():
@@ -193,82 +183,22 @@ def send_kitchen_orders():
             })
 
         checked_out_at = order.checked_out_at.strftime('%y/%m/%d %H:%M:%S')
-        # print(checked_out_at)
 
         send_data.append({
             "uuid": order.uuid,
             "orderedAt": checked_out_at,
             "items": items,
         })
-    # print(send_data)
 
     socketio.emit("kitchen_order_data", send_data, namespace='/display/kitchen')
+    print("キッチンに情報を送信しました")
+    return send_data
 
 
 @socketio.on('kitchen_order_provided', namespace='/display/kitchen')
 def kitchen_order_provided(msg):
-    print("kitchen_order_provided", msg)
     order = Order.query.get(msg)
     order.provided = 1
     db.session.commit()
     send_kitchen_orders()
-
-
-# @app.route('/register')
-# def register():
-#     socketio.emit('regi_display_reload')
-#     return render_template(
-#         "register.html",
-#         menus=Menus.query.all(),
-#         session_menus=SESSION_MENUES.query.all()
-#     )
-
-
-# @app.route('/add_menu', methods=['POST'])
-# def add_menu():
-#     if request.method == 'POST':
-#         menu_id = int(request.form.get("id")[5:])
-#         quantity = int(request.form.get("quantity"))
-#         session_menus = SESSION_MENUES(
-#             menu_name=Menus.query.get(menu_id).menu_name,
-#             menu_id=menu_id,
-#             short_name=Menus.query.get(menu_id).short_name,
-#             quantity=quantity,
-#             value=Menus.query.get(menu_id).value,
-#             sum_value=Menus.query.get(menu_id).value * quantity
-#         )
-#         db.session.add(session_menus)
-#         db.session.commit()
-#
-#         return redirect("/register")
-
-# @app.route('/delete_menu', methods=['POST'])
-# def delete_menu():
-#     if request.method == 'POST':
-#         menu_id = int(request.form.get("id")[5:])
-#         menu = SESSION_MENUES.query.get(menu_id)
-#         db.session.delete(menu)
-#         db.session.commit()
-#
-#         return redirect("/register")
-
-# @app.route("/clear")
-# def clear():
-#     delete_session()
-#     socketio.emit('regi_display_reload')
-#     socketio.emit('kitchen_display_reload')
-#     return redirect("/")
-
-
-# @app.route("/display/regi", methods=['GET'])  # SHO800
-# def regi_display():
-#     if request.method == 'GET':
-#         return render_template("regi_display.html", session_menus=SESSION_MENUES.query.all())
-
-
-# @app.route("/display/kitchen", methods=['GET'])  # SHO800
-# def kitchen_display():
-#     if request.method == 'GET':
-#         active_orders = Order.query.filter(Order.provided != 1).all()
-#
-#         return render_template("kitchen_display.html", orders=active_orders)
+    print("注文の提供が完了したようです", msg)

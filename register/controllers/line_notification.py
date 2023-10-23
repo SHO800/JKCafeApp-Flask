@@ -1,6 +1,7 @@
 import requests
 
-def SEND(menues, total_value):
+
+def send(menues, total_value):
     line_notify_token = 'IgonTgHLOFrzFnRBUHuzNReVfP5keo8U7Z2WULQba29'
     line_notify_api = 'https://notify-api.line.me/api/notify'
     headers = {'Authorization': f'Bearer {line_notify_token}'}
@@ -10,4 +11,4 @@ def SEND(menues, total_value):
 利益：{total_value}
 """
     data = {'message': message}
-    requests.post(line_notify_api, headers = headers, data = data)
+    requests.post(line_notify_api, headers=headers, data=data)
