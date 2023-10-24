@@ -10,7 +10,7 @@ from flask_socketio import join_room, emit
 
 from register.controllers.line_notification import send
 from register import app, db, socketio
-from register.common.models.menus import Menus, Toppings
+from register.common.models.menus import Menus, Toppings, Coupons
 from register.common.models.orders import Order, OrderItem, Options
 from register.csv_to_DB import menus_csv_db
 
@@ -130,15 +130,19 @@ def menus():
     response = {}
     menus = Menus.query.all()
     toppings = Toppings.query.all()
+    coupons = Coupons.query.all()
     for menu in menus:
         toppings_of_menu = list(filter(lambda item: item.parent == menu.id, toppings))
         toppings_of_menu = {item.topping_name: {"value": item.value} for item in toppings_of_menu}
+        coupons_of_menu = list(filter(lambda item: item.parent == menu.id, coupons))
+        coupons_of_menu = {item.topping_name: {"value": item.value} for item in coupons_of_menu}
         response[menu.id] = {
             "menu_name": menu.menu_name,
             "value": menu.value,
             "short_name": menu.short_name,
             "text": menu.text,
-            "topping": toppings_of_menu
+            "topping": toppings_of_menu,
+            "coupon": coupons_of_menu
         }
     response = json.dumps(response)
     return make_response(response)
