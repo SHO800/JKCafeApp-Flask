@@ -9,6 +9,7 @@ class Menus(db.Model):
     short_name = db.Column(db.String(32))
     text = db.Column(db.String(128))
     toppings = db.relationship('Toppings', backref='menus')
+    coupons = db.relationship('Coupons', backref='menus')
 
 
 class Toppings(db.Model):
@@ -16,4 +17,12 @@ class Toppings(db.Model):
     parent = db.Column(db.Integer, db.ForeignKey('menus.id'))
 
     topping_name = db.Column(db.String(32))
+    value = db.Column(db.Integer)
+
+
+class Coupons(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    parent = db.Column(db.Integer, db.ForeignKey('menus.id'))
+
+    coupon_name = db.Column(db.String(32))
     value = db.Column(db.Integer)

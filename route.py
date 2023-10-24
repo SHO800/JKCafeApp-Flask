@@ -66,9 +66,24 @@ def checkout_submit():
                         option_name=order_topping_name,
                         value=int(order_topping["value"]),
                         quantity=int(order_topping["quantity"]),
-                        coupon_amount=int(order_topping["couponAmount"])
                     )
                     db.session.add(order_option)
+
+            if order_data['coupon']:
+                for order_coupon_name in order_data['coupon']:
+                    order_coupon = order_data['coupon'][order_coupon_name]
+                    if order_coupon["quantity"] <= 0:
+                        continue
+
+                    order_coupon_uuid = str(uuid.uuid4())
+                    order_coupon_add_data = Options(
+                        uuid=order_coupon_uuid,
+                        parent=order_child_uuid,
+                        coupon_name=order_coupon_name,
+                        value=int(order_coupon["value"]),
+                        quantity=int(order_coupon["quantity"]),
+                    )
+                    db.session.add(order_coupon_add_data)
 
         db.session.commit()
 

@@ -2,7 +2,7 @@ import csv
 import os.path
 
 from register import app, db
-from register.common.models.menus import Menus, Toppings
+from register.common.models.menus import Menus, Toppings, Coupons
 
 
 def menus_csv_db():
@@ -29,20 +29,31 @@ def menus_csv_db():
 
                     menus = Menus(
                         id=i,
-                        menu_name=csv_data.pop(0), # [0]
-                        value=int(csv_data.pop(0)), # [1]
-                        short_name=csv_data.pop(0), # [2]
-                        text=csv_data.pop(0), # [3]
+                        menu_name=csv_data.pop(0),  # [0]
+                        value=int(csv_data.pop(0)),  # [1]
+                        short_name=csv_data.pop(0),  # [2]
+                        text=csv_data.pop(0),  # [3]
                     )
 
                     print(csv_data)
-                    if len(csv_data) > 0: # トッピングがあるということ
-                        while len(csv_data) > 1: # もし数が合わなければ最後の要素は無視される
-                            toppings = Toppings(
-                                parent=i,
-                                topping_name=csv_data.pop(0),
-                                value=int(csv_data.pop(0)),
-                            )
-                            db.session.add(toppings)
+                    if len(csv_data) > 0:  # トッピングかクーポンがあるということ
+                        while len(csv_data) > 2:  # もし数が合わなければ最後の要素は無視される
+                            if csv_data[0] == "c":
+                                csv_data.pop(0)
+                                coupons = Coupons(
+                                    parent=i,
+                                    coupon_name=csv_data.pop(0),
+                                    value=int(csv_data.pop(0)),
+                                )
+                                db.session.add(coupons)
+
+                            elif csv_data[0] == "t":
+                                csv_data.pop(0)
+                                toppings = Toppings(
+                                    parent=i,
+                                    topping_name=csv_data.pop(0),
+                                    value=int(csv_data.pop(0)),
+                                )
+                                db.session.add(toppings)
                     db.session.add(menus)
             db.session.commit()
