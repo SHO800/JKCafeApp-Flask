@@ -7,7 +7,7 @@ class Order(db.Model):
     checked_out_at = db.Column(db.DateTime, nullable=False)
     total_value = db.Column(db.Integer())
     item = db.relationship('OrderItem', backref='order')
-    provided = db.Column(db.Integer())
+    status = db.Column(db.Integer())  # 0で未完成, 1で完成, 2でキャンセル
 
 
 class OrderItem(db.Model):

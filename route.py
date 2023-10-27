@@ -8,7 +8,6 @@ import pytz
 from flask import render_template, redirect, request, make_response, jsonify
 from flask_socketio import join_room, emit
 
-from register.controllers.line_notification import send
 from register import app, db, socketio
 from register.common.models.menus import Menus, Toppings, MenuCoupons
 from register.common.models.orders import Order, OrderItem, Options, OrderCoupons
@@ -34,7 +33,7 @@ def checkout_submit():
             uuid=order_uuid,
             checked_out_at=now_time,
             total_value=sum_value,
-            provided=0,
+            status=0,
         )
 
         db.session.add(order_parent)
@@ -85,12 +84,12 @@ def checkout_submit():
                     )
                     db.session.add(order_coupon_add_data)
 
-        send("menu", order_parent.total_value)
         db.session.commit()
 
         print("order_added!")
         send_data = send_kitchen_orders()
         # LINE送信 一時停止中
+        # send("menu", order_parent.total_value)
         return order_datas
 
 
@@ -183,7 +182,7 @@ def display_bridge(msg):
 def send_kitchen_orders():
     send_data = []
 
-    active_orders: List[Order] = Order.query.filter(Order.provided != 1).all()
+    active_orders: List[Order] = Order.query.filter(Order.status != 1).all()
     for order in active_orders:
         items = []
         for item in order.item:
@@ -220,7 +219,7 @@ def send_kitchen_orders():
 @socketio.on('kitchen_order_provided', namespace='/display/kitchen')
 def kitchen_order_provided(msg):
     order = Order.query.get(msg)
-    order.provided = 1
+    order.status = 1
     db.session.commit()
     send_kitchen_orders()
     print("注文の提供が完了したようです", msg)
@@ -229,7 +228,6 @@ def kitchen_order_provided(msg):
 def send_register_history():
     send_data = []
 
-    # recently_orders: List[Order] = Order.query.filter(Order.provided != 1).all()
     last_ten = Order.query.order_by(Order.checked_out_at.desc()).limit(50).all()
     for order in last_ten:
         items = []
@@ -240,6 +238,16 @@ def send_register_history():
                     "uuid": option.uuid,
                     "option_name": option.option_name,
                     "quantity": option.quantity,
+                    "value": option.value,
+                })
+
+            coupons = []
+            for coupon in item.coupon:
+                coupons.append({
+                    "uuid": coupon.uuid,
+                    "coupon_name": coupon.coupon_name,
+                    "quantity": coupon.quantity,
+                    "value": coupon.value,
                 })
 
             items.append({
@@ -248,6 +256,8 @@ def send_register_history():
                 "menu_name": item.menu_name,
                 "quantity": item.quantity,
                 "option": options,
+                "coupon": coupons,
+                "value": item.value,
             })
 
         checked_out_at = order.checked_out_at.strftime('%y/%m/%d %H:%M:%S')
@@ -256,10 +266,20 @@ def send_register_history():
             "uuid": order.uuid,
             "orderedAt": checked_out_at,
             "items": items,
+            "sum": order.total_value,
         })
-
-
 
     socketio.emit("history", send_data, namespace='/register')
     print("レジに履歴を送信しました")
     return send_data
+
+
+@socketio.on('cancel_order', namespace='/register')
+def cancel_order(msg):
+    order_uuid = msg["orderUuid"]
+    print(order_uuid)
+    order = Order.query.get(order_uuid)
+    order.status = 2
+    db.session.commit()
+    send_kitchen_orders()
+    print("注文をキャンセルしました。 id: ", msg)
