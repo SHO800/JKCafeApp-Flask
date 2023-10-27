@@ -7,6 +7,7 @@ from typing import List
 import pytz
 from flask import render_template, redirect, request, make_response, jsonify
 from flask_socketio import join_room, emit
+from register.controllers.line_notification import send
 
 from register import app, db, socketio
 from register.common.models.menus import Menus, Toppings, MenuCoupons
@@ -89,7 +90,7 @@ def checkout_submit():
         print("order_added!")
         send_data = send_kitchen_orders()
         # LINE送信 一時停止中
-        # send("menu", order_parent.total_value)
+        send(order_parent.total_value, send_data)
         return order_datas
 
 
@@ -208,6 +209,7 @@ def send_kitchen_orders():
             "uuid": order.uuid,
             "orderedAt": checked_out_at,
             "items": items,
+            "sum": order.total_value,
         })
 
     socketio.emit("kitchen_order_data", send_data, namespace='/display/kitchen')
