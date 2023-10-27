@@ -182,7 +182,7 @@ def display_bridge(msg):
 def send_kitchen_orders():
     send_data = []
 
-    active_orders: List[Order] = Order.query.filter(Order.status != 1).all()
+    active_orders: List[Order] = Order.query.filter(Order.status == 0).all()
     for order in active_orders:
         items = []
         for item in order.item:
@@ -267,6 +267,7 @@ def send_register_history():
             "orderedAt": checked_out_at,
             "items": items,
             "sum": order.total_value,
+            "status": order.status,
         })
 
     socketio.emit("history", send_data, namespace='/register')
@@ -282,4 +283,5 @@ def cancel_order(msg):
     order.status = 2
     db.session.commit()
     send_kitchen_orders()
+    send_register_history()
     print("注文をキャンセルしました。 id: ", msg)
