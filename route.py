@@ -278,7 +278,6 @@ def send_register_history():
 @socketio.on('cancel_order', namespace='/register')
 def cancel_order(msg):
     order_uuid = msg["orderUuid"]
-    print(order_uuid)
     order = Order.query.get(order_uuid)
     order.status = 2
     db.session.commit()
