@@ -19,7 +19,7 @@ class OrderItem(db.Model):
     short_name = db.Column(db.String(32))
     value = db.Column(db.Integer)
     quantity = db.Column(db.Integer)
-    coupon = db.relationship('Coupons', backref='orderItem')
+    coupon = db.relationship('OrderCoupons', backref='orderItem')
     option = db.relationship('Options', backref='orderItem')
     sum = db.Column(db.Integer)
 
@@ -33,7 +33,8 @@ class Options(db.Model):
     quantity = db.Column(db.Integer)
 
 
-class Coupons(db.Model):
+class OrderCoupons(db.Model):
+    __table_args__ = {'extend_existing': True}
     uuid = db.Column(db.String(), primary_key=True)
     parent = db.Column(db.String(), db.ForeignKey(OrderItem.uuid))
 

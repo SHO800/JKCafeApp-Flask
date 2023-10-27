@@ -10,8 +10,8 @@ from flask_socketio import join_room, emit
 
 from register.controllers.line_notification import send
 from register import app, db, socketio
-from register.common.models.menus import Menus, Toppings, Coupons
-from register.common.models.orders import Order, OrderItem, Options
+from register.common.models.menus import Menus, Toppings, MenuCoupons
+from register.common.models.orders import Order, OrderItem, Options, OrderCoupons
 from register.csv_to_DB import menus_csv_db
 
 
@@ -76,7 +76,7 @@ def checkout_submit():
                         continue
 
                     order_coupon_uuid = str(uuid.uuid4())
-                    order_coupon_add_data = Options(
+                    order_coupon_add_data = OrderCoupons(
                         uuid=order_coupon_uuid,
                         parent=order_child_uuid,
                         coupon_name=order_coupon_name,
@@ -85,12 +85,12 @@ def checkout_submit():
                     )
                     db.session.add(order_coupon_add_data)
 
+        send("menu", order_parent.total_value)
         db.session.commit()
 
         print("order_added!")
         send_data = send_kitchen_orders()
         # LINE送信 一時停止中
-        send(send_data)
         return order_datas
 
 
@@ -118,7 +118,7 @@ room_id = 0
 @app.route("/client-id", methods=['GET'])
 def give_client_id():
     global room_id
-    room_id += 1
+    # room_id += 1 # もしレジを複数台にするならこれ使う
     print("told_register_clientId", room_id)
     return jsonify({'clientId': room_id})
 
@@ -130,12 +130,12 @@ def menus():
     response = {}
     menus = Menus.query.all()
     toppings = Toppings.query.all()
-    coupons = Coupons.query.all()
+    coupons = MenuCoupons.query.all()
     for menu in menus:
         toppings_of_menu = list(filter(lambda item: item.parent == menu.id, toppings))
         toppings_of_menu = {item.topping_name: {"value": item.value} for item in toppings_of_menu}
         coupons_of_menu = list(filter(lambda item: item.parent == menu.id, coupons))
-        coupons_of_menu = {item.topping_name: {"value": item.value} for item in coupons_of_menu}
+        coupons_of_menu = {item.coupon_name: {"value": item.value} for item in coupons_of_menu}
         response[menu.id] = {
             "menu_name": menu.menu_name,
             "value": menu.value,
@@ -150,6 +150,7 @@ def menus():
 
 @socketio.on("connect", namespace='/register')
 def handle_connect():
+    send_register_history()
     pass
 
 
@@ -174,6 +175,7 @@ def join_register_display(msg):
 @socketio.on('temp_order_data', namespace='/register')
 def display_bridge(msg):
     data_json = json.loads(msg["data"])
+    print("error", msg)
     print(f"{msg['clientId']}番レジの情報が更新されました")
     emit("temp_order_data", data_json, to=str(msg["clientId"]), namespace='/display/register')
 
@@ -211,6 +213,7 @@ def send_kitchen_orders():
 
     socketio.emit("kitchen_order_data", send_data, namespace='/display/kitchen')
     print("キッチンに情報を送信しました")
+    send_register_history()
     return send_data
 
 
@@ -221,3 +224,42 @@ def kitchen_order_provided(msg):
     db.session.commit()
     send_kitchen_orders()
     print("注文の提供が完了したようです", msg)
+
+
+def send_register_history():
+    send_data = []
+
+    # recently_orders: List[Order] = Order.query.filter(Order.provided != 1).all()
+    last_ten = Order.query.order_by(Order.checked_out_at.desc()).limit(50).all()
+    for order in last_ten:
+        items = []
+        for item in order.item:
+            options = []
+            for option in item.option:
+                options.append({
+                    "uuid": option.uuid,
+                    "option_name": option.option_name,
+                    "quantity": option.quantity,
+                })
+
+            items.append({
+                "uuid": item.uuid,
+                "menu_id": item.menu_id,
+                "menu_name": item.menu_name,
+                "quantity": item.quantity,
+                "option": options,
+            })
+
+        checked_out_at = order.checked_out_at.strftime('%y/%m/%d %H:%M:%S')
+
+        send_data.append({
+            "uuid": order.uuid,
+            "orderedAt": checked_out_at,
+            "items": items,
+        })
+
+
+
+    socketio.emit("history", send_data, namespace='/register')
+    print("レジに履歴を送信しました")
+    return send_data

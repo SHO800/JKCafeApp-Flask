@@ -2,7 +2,7 @@ import csv
 import os.path
 
 from register import app, db
-from register.common.models.menus import Menus, Toppings, Coupons
+from register.common.models.menus import Menus, Toppings, MenuCoupons
 
 
 def menus_csv_db():
@@ -40,7 +40,7 @@ def menus_csv_db():
                         while len(csv_data) > 2:  # もし数が合わなければ最後の要素は無視される
                             if csv_data[0] == "c":
                                 csv_data.pop(0)
-                                coupons = Coupons(
+                                coupons = MenuCoupons(
                                     parent=i,
                                     coupon_name=csv_data.pop(0),
                                     value=int(csv_data.pop(0)),
