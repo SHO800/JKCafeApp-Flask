@@ -7,7 +7,8 @@ from typing import List
 import pytz
 from flask import render_template, redirect, request, make_response, jsonify
 from flask_socketio import join_room, emit
-from register.controllers.line_notification import send
+from register.controllers.line_notification import send_order_notify
+from sqlalchemy import func
 
 from register import app, db, socketio
 from register.common.models.menus import Menus, Toppings, MenuCoupons
@@ -30,8 +31,12 @@ def checkout_submit():
         sum_value = sum([data["sum"] for data in order_datas])
 
         order_uuid = str(uuid.uuid4())
+        order_id = db.session.query(func.max(Order.order_id)).scalar() + 1
+        print("order", order_id)
+
         order_parent = Order(
             uuid=order_uuid,
+            order_id=order_id,
             checked_out_at=now_time,
             total_value=sum_value,
             status=0,
@@ -88,9 +93,10 @@ def checkout_submit():
         db.session.commit()
 
         print("order_added!")
-        send_data = send_kitchen_orders()
-        # LINE送信 一時停止中
-        send(order_parent.total_value, send_data)
+        send_kitchen_orders()
+        send_data = Order.query.get(order_uuid)
+        # LINE送信
+        send_order_notify(send_data)
         return order_datas
 
 
@@ -175,8 +181,7 @@ def join_register_display(msg):
 @socketio.on('temp_order_data', namespace='/register')
 def display_bridge(msg):
     data_json = json.loads(msg["data"])
-    print("error", msg)
-    print(f"{msg['clientId']}番レジの情報が更新されました")
+    print(f"{msg['clientId']}番レジの情報が更新されました", msg)
     emit("temp_order_data", data_json, to=str(msg["clientId"]), namespace='/display/register')
 
 
@@ -207,6 +212,7 @@ def send_kitchen_orders():
 
         send_data.append({
             "uuid": order.uuid,
+            "orderId": order.order_id,
             "orderedAt": checked_out_at,
             "items": items,
             "sum": order.total_value,
@@ -230,8 +236,8 @@ def kitchen_order_provided(msg):
 def send_register_history():
     send_data = []
 
-    last_ten = Order.query.order_by(Order.checked_out_at.desc()).limit(50).all()
-    for order in last_ten:
+    recently = Order.query.order_by(Order.checked_out_at.desc()).limit(50).all()
+    for order in recently:
         items = []
         for item in order.item:
             options = []
@@ -267,6 +273,7 @@ def send_register_history():
         send_data.append({
             "uuid": order.uuid,
             "orderedAt": checked_out_at,
+            "orderId": order.order_id,
             "items": items,
             "sum": order.total_value,
             "status": order.status,
@@ -286,3 +293,5 @@ def cancel_order(msg):
     send_kitchen_orders()
     send_register_history()
     print("注文をキャンセルしました。 id: ", msg)
+
+
