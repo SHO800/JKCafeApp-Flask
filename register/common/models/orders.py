@@ -3,6 +3,7 @@ from register import db
 
 class Order(db.Model):
     uuid = db.Column(db.String(), nullable=False, primary_key=True)
+    order_id = db.Column(db.Integer, nullable=False)
 
     checked_out_at = db.Column(db.DateTime, nullable=False)
     total_value = db.Column(db.Integer())
