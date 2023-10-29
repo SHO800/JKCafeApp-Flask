@@ -7,12 +7,12 @@ from typing import List
 import pytz
 from flask import render_template, redirect, request, make_response, jsonify
 from flask_socketio import join_room, emit
-from register.controllers.line_notification import send_order_notify
 from sqlalchemy import func
 
 from register import app, db, socketio
 from register.common.models.menus import Menus, Toppings, MenuCoupons
 from register.common.models.orders import Order, OrderItem, Options, OrderCoupons
+from register.controllers.line_notification import send_order_notify
 from register.csv_to_DB import menus_csv_db
 
 
@@ -281,6 +281,9 @@ def send_register_history():
 
     socketio.emit("history", send_data, namespace='/register')
     print("レジに履歴を送信しました")
+
+    send_customer_display()
+
     return send_data
 
 
@@ -294,4 +297,24 @@ def cancel_order(msg):
     send_register_history()
     print("注文をキャンセルしました。 id: ", msg)
 
+
+@socketio.on('connect', namespace='/display/customer')
+def customer_display_connect():
+    send_customer_display()
+    pass
+
+
+def send_customer_display():
+    # Orderのうち、statusが0のもので最も古いものを取得
+    order = Order.query.filter(Order.status == 0).order_by(Order.checked_out_at.asc()).all()
+    if order is None:
+        socketio.emit("customer_display", -1, namespace='/display/customer')
+        return
+
+    order_id = []
+    for o in order:
+        order_id.append(o.order_id)
+
+
+    socketio.emit("customer_display", order_id,  namespace='/display/customer')
 

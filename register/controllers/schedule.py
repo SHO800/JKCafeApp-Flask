@@ -22,7 +22,7 @@ def send_stats_job():
 
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=send_stats_job, trigger="interval", minutes=0.01)
+scheduler.add_job(func=send_stats_job, trigger="interval", minutes=60)
 scheduler.start()
 
 

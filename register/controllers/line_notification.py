@@ -56,6 +56,7 @@ def send_stats_notify(menus, menu_toppings, today_orders):
 {total}
 """
     print(message)
+    data = {'message': message}
 
     requests.post(line_notify_api, headers=headers, data=data)
 
